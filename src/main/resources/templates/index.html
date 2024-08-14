@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="kor">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image PDF</title>
+    <script>
+        async function generatePdf(event) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById('uploadForm'));
+            const response = await fetch('/generate', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const fileName = response.headers.get('Content-Disposition')
+                    .match(/filename="(.+)"/)[1];
+                const generationTime = response.headers.get('X-PDF-Generation-Time');
+                updatePdfList(fileName, generationTime);
+            } else {
+                alert('PDF 생성에 실패했습니다.');
+            }
+        }
+
+        function updatePdfList(fileName, generationTime) {
+            const listContainer = document.getElementById('pdfList');
+            const listItem = document.createElement('li');
+            listItem.textContent = `${fileName} - 생성 시간: ${generationTime}`;
+            listContainer.appendChild(listItem);
+        }
+
+        async function mergePdfs(event) {
+            event.preventDefault();
+
+            const response = await fetch('/merge', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'merged_output.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                alert('PDF 병합이 완료되었습니다.');
+            } else {
+                alert('PDF 병합에 실패했습니다.');
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>Generate PDF Demo</h1>
+<form id="uploadForm" action="/generate" method="post" enctype="multipart/form-data" onsubmit="generatePdf(event)">
+    <label for="image">이미지 선택 :</label>
+    <input type="file" id="image" name="image" accept="image/*" required><br><br>
+
+    <label for="content">기능 설명 :</label>
+    <textarea id="content" name="content" rows="4" cols="50" required></textarea><br><br>
+
+    <label for="modificationRequirements">수정 요청사항 :</label>
+    <textarea id="modificationRequirements" name="modificationRequirements" rows="4" cols="50" required></textarea><br><br>
+
+    <button type="submit">PDF 생성</button>
+</form>
+
+<h2>PDF List:</h2>
+<ul id="pdfList"></ul>
+
+<button onclick="mergePdfs(event)">병합하기</button>
+
+</body>
+</html>
