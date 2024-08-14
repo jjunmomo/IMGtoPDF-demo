@@ -24,6 +24,16 @@ public class PdfMergeUtil {
         // 병합된 PDF를 메모리 스트림으로 저장
         mergerUtility.setDestinationStream(outputStream);
         mergerUtility.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
+
+// 스트림 디버깅
+//        try {
+//            mergerUtility.setDestinationStream(outputStream);
+//            mergerUtility.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
+//        } catch (Exception e) {
+//            System.err.println("Error during PDF merging");
+//            e.printStackTrace();
+//            throw e;
+//        }
     }
 
     public static void deleteIndividualPdfs(List<PdfGenerationInfo> pdfPages, String filePath) {
@@ -33,6 +43,6 @@ public class PdfMergeUtil {
                 file.delete();
             }
         }
-        pdfPages.clear(); // 병합 후 리스트를 초기화하여 기존 PDF 파일 목록을 비웁니다.
+        pdfPages.clear();
     }
 }

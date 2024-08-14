@@ -9,11 +9,13 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 
 public class PdfGeneratorUtil {
 
+    /*
+    텍스트 작성하기
+     */
     public static void drawText(PDPageContentStream contentStream,
                                 PDType0Font font,
                                 String text,
@@ -27,18 +29,25 @@ public class PdfGeneratorUtil {
         contentStream.endText();
     }
 
+    /*
+    선 그리기
+     */
     public static void drawLine(PDPageContentStream contentStream,
+                                Color color,
                                 float startX,
                                 float startY,
                                 float endX,
                                 float endY) throws IOException {
-        contentStream.setStrokingColor(Color.BLACK);
+        contentStream.setStrokingColor(color);
         contentStream.setLineWidth(PdfConstants.LINE_WIDTH);
         contentStream.moveTo(startX, startY);
         contentStream.lineTo(endX, endY);
         contentStream.stroke();
     }
 
+    /*
+    좌표계 재설정
+     */
     public static void resetCoordinateSystem(PDPageContentStream contentStream,
                                              float pageHeight) throws IOException {
         contentStream.saveGraphicsState();
@@ -46,36 +55,50 @@ public class PdfGeneratorUtil {
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(90), 0, 0));
     }
 
+    /*
+    헤더 추가
+     */
     public static void addHeader(PDPageContentStream contentStream,
                                  PDType0Font font,
                                  float pageHeight,
                                  float pageWidth,
                                  int pageNumber) throws IOException {
-        drawText(contentStream, font, "문서 제목 또는 회사 이름", 20, pageHeight - 20, 12);
-        drawText(contentStream, font, "페이지 : " + pageNumber, pageWidth - 100, pageHeight - 20, 12);
-        drawLine(contentStream, 0, pageHeight - PdfConstants.HEADER_HEIGHT, pageWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
+        drawText(contentStream, font, "문서 제목", 20, pageHeight - 20, 12);
+        drawText(contentStream, font, "페이지 : " + pageNumber, pageWidth - 100, pageHeight - 30, 12);
+        drawLine(contentStream, Color.gray,0, pageHeight - PdfConstants.HEADER_HEIGHT, pageWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
     }
 
+    /*
+    푸터 추가
+     */
     public static void addFooter(PDPageContentStream contentStream,
                                  PDType0Font font,
                                  float pageWidth) throws IOException {
-        drawText(contentStream, font, "페이지 번호 또는 회사 정보", 20, PdfConstants.VERTICAL_MARGIN + 20, 12);
-        drawLine(contentStream, 0, PdfConstants.FOOTER_HEIGHT, pageWidth, PdfConstants.FOOTER_HEIGHT);
+        drawText(contentStream, font, "회사 정보", pageWidth-100 , PdfConstants.VERTICAL_MARGIN + 20, 9);
+        drawLine(contentStream, Color.gray,0, PdfConstants.FOOTER_HEIGHT, pageWidth, PdfConstants.FOOTER_HEIGHT);
     }
 
+    /*
+    섹션 나누기
+     */
     public static void addSectionDividers(PDPageContentStream contentStream,
                                           float pageWidth,
                                           float pageHeight) throws IOException {
         float sectionWidth = pageWidth / 3;
-        drawLine(contentStream, sectionWidth, PdfConstants.FOOTER_HEIGHT, sectionWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
-        drawLine(contentStream, 2 * sectionWidth, PdfConstants.FOOTER_HEIGHT, 2 * sectionWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
+//        drawLine(contentStream,Color.DARK_GRAY, sectionWidth, PdfConstants.FOOTER_HEIGHT, sectionWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
+//        drawLine(contentStream,Color.DARK_GRAY, 2 * sectionWidth, PdfConstants.FOOTER_HEIGHT, 2 * sectionWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
     }
 
+    /*
+    좌측 섹션 이미지 추가
+     */
     public static void addImage(PDPageContentStream contentStream,
                                 MultipartFile imageFile,
                                 PDDocument document,
                                 float sectionWidth,
                                 float sectionHeight) throws IOException {
+
+
         float availableHeight = sectionHeight - (2 * PdfConstants.VERTICAL_MARGIN);
         float availableWidth = sectionWidth - 10;
 
@@ -96,20 +119,26 @@ public class PdfGeneratorUtil {
         contentStream.drawImage(image, xPosition, yPosition, imageWidth, imageHeight);
     }
 
+    /*
+    섹션에 글적기
+     */
     public static void addTextToSections(PDPageContentStream contentStream,
-                                         PDType0Font font,
+                                         PDType0Font font1,
+                                         PDType0Font font2,
                                          float sectionWidth,
                                          float pageHeight,
                                          ProposalComments comments) throws IOException {
-        drawText(contentStream, font, "화면 및 기능 설명", sectionWidth + 20, pageHeight - 60, 14);
+        //중앙 섹션
+        drawText(contentStream, font1, "화면 및 기능 설명", sectionWidth + 20, pageHeight - 60, 14);
 
-        drawText(contentStream, font, comments.getContent()
+        drawText(contentStream, font2, comments.getContent()
                 != null
                 ? comments.getContent() : "기능 설명이 없습니다.", sectionWidth + 20, pageHeight - 80, 12);
 
-        drawText(contentStream, font, "수정 요청사항", 2 * sectionWidth + 20, pageHeight - 60, 14);
+        //우측 섹션
+        drawText(contentStream, font1, "수정 요청사항", 2 * sectionWidth + 20, pageHeight - 60, 14);
 
-        drawText(contentStream, font, comments.getModificationRequirements()
+        drawText(contentStream, font2, comments.getModificationRequirements()
                 != null
                 ? comments.getModificationRequirements() : "수정 요청사항이 없습니다.", 2 * sectionWidth + 20, pageHeight - 80, 12);
     }

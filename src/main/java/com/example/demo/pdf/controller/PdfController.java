@@ -35,7 +35,6 @@ public class PdfController {
 
     private List<PdfGenerationInfo> pdfGenerationInfoList = new ArrayList<>();
 
-
     private String path;
 
     public PdfController() {
@@ -50,6 +49,7 @@ public class PdfController {
         }
     }
 
+    //PDF 생성
     @PDFTimeCheck
     @PostMapping("/generate")
     public ResponseEntity<byte[]> generatePdf(@RequestParam("image") MultipartFile imageFile,
@@ -57,7 +57,9 @@ public class PdfController {
                                               @RequestParam("modificationRequirements") String modificationRequirements) {
         try (PDDocument document = new PDDocument()) {
 
-            PDPage page = new PDPage(PDRectangle.A4);
+// 페이지 크기 커스텀 (1920x911)
+            PDRectangle customSize = new PDRectangle(911, 1920);
+            PDPage page = new PDPage(customSize);
             document.addPage(page);
             page.setRotation(90);
 //
@@ -76,7 +78,9 @@ public class PdfController {
 //            }
 //            PDType0Font font = PDType0Font.load(document, new File(fontPath));
 
-            PDType0Font font=PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Regular.ttf"));
+
+            PDType0Font boldFont = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Bold.ttf"));
+            PDType0Font bodyFont = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Regular.ttf"));
             PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
             float pageWidth = page.getMediaBox().getHeight();
@@ -85,8 +89,8 @@ public class PdfController {
             PdfGeneratorUtil.resetCoordinateSystem(contentStream, pageHeight);
 
             int pageNumber = pdfGenerationInfoList.size() + 1;
-            PdfGeneratorUtil.addHeader(contentStream, font, pageHeight, pageWidth, pageNumber);
-            PdfGeneratorUtil.addFooter(contentStream, font, pageWidth);
+            PdfGeneratorUtil.addHeader(contentStream, boldFont, pageHeight, pageWidth, pageNumber);
+            PdfGeneratorUtil.addFooter(contentStream, boldFont , pageWidth);
             PdfGeneratorUtil.addSectionDividers(contentStream, pageWidth, pageHeight);
 
             float sectionHeight = pageHeight - PdfConstants.HEADER_HEIGHT - PdfConstants.FOOTER_HEIGHT;
@@ -95,7 +99,7 @@ public class PdfController {
             PdfGeneratorUtil.addImage(contentStream, imageFile, document, sectionWidth, sectionHeight);
 
             ProposalComments comments = new ProposalComments(content, modificationRequirements);
-            PdfGeneratorUtil.addTextToSections(contentStream, font, sectionWidth, pageHeight, comments);
+            PdfGeneratorUtil.addTextToSections(contentStream, boldFont ,bodyFont, sectionWidth, pageHeight, comments);
 
             contentStream.restoreGraphicsState();
             contentStream.close();
@@ -117,57 +121,8 @@ public class PdfController {
         }
     }
 
-//    @PDFTimeCheck
-//    @PostMapping("/generate")
-//    public ResponseEntity<byte[]> generatePdf(@RequestParam("image") MultipartFile imageFile,
-//                                              @RequestParam("content") String content,
-//                                              @RequestParam("modificationRequirements") String modificationRequirements) {
-//        try (PDDocument document = new PDDocument()) {
-//            PDPage page = new PDPage(PDRectangle.A4);
-//            document.addPage(page);
-//            page.setRotation(90);
-//
-//            PDType0Font font = PDType0Font.load(document, new File("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"));
-//            PDPageContentStream contentStream = new PDPageContentStream(document, page);
-//
-//            float pageWidth = page.getMediaBox().getHeight();
-//            float pageHeight = page.getMediaBox().getWidth();
-//
-//            PdfGeneratorUtil.resetCoordinateSystem(contentStream, pageHeight);
-//
-//            int pageNumber = pdfGenerationInfoList.size() + 1;
-//            PdfGeneratorUtil.addHeader(contentStream, font, pageHeight, pageWidth, pageNumber);
-//            PdfGeneratorUtil.addFooter(contentStream, font, pageWidth);
-//            PdfGeneratorUtil.addSectionDividers(contentStream, pageWidth, pageHeight);
-//
-//            float sectionHeight = pageHeight - 90;
-//            float sectionWidth = pageWidth / 3;
-//            PdfGeneratorUtil.addImage(contentStream, imageFile, document, sectionWidth, sectionHeight);
-//
-//            ProposalComments comments = new ProposalComments(content, modificationRequirements);
-//            PdfGeneratorUtil.addTextToSections(contentStream, font, sectionWidth, pageHeight, comments);
-//
-//            contentStream.restoreGraphicsState();
-//            contentStream.close();
-//
-//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//            document.save(byteArrayOutputStream);
-//            byte[] pdfContent = byteArrayOutputStream.toByteArray();
-//
-//            String fileName = "generated_pdf_" + System.currentTimeMillis() + ".pdf";
-//            File file = new File(path + fileName);
-//            document.save(file);
-//
-//            PdfGenerationInfo pdfInfo = new PdfGenerationInfo(fileName);
-//            pdfGenerationInfoList.add(pdfInfo);
-//
-//            return PdfResponseUtil.createResponse(pdfContent, fileName);
-//        } catch (IOException e) {
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
 
-
+    //PDF 리스트 불러오기
     @GetMapping("/generated")
     public ResponseEntity<List<String>> getGeneratedPdfs() {
         List<String> encodedFileNames = pdfGenerationInfoList.stream()
@@ -180,6 +135,7 @@ public class PdfController {
         return new ResponseEntity<>(encodedFileNames, HttpStatus.OK);
     }
 
+    //PDF 리스트 병합
     @PostMapping("/merge")
     public ResponseEntity<byte[]> mergePdfs() {
         String timeStamp = String.valueOf(System.currentTimeMillis());
@@ -187,11 +143,27 @@ public class PdfController {
         String mergedFilePath = path + mergedFileName;
 
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-             TeeOutputStream teeOutputStream = new TeeOutputStream(byteArrayOutputStream, new FileOutputStream(mergedFilePath))) {
+             FileOutputStream fileOutputStream = new FileOutputStream(mergedFilePath);
+             TeeOutputStream teeOutputStream = new TeeOutputStream(byteArrayOutputStream, fileOutputStream)) {
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
+            mergerUtility.setDestinationStream(teeOutputStream);
 
-            // PDF 파일 병합 수행 및 메모리와 파일로 동시에 저장
+            // 첫 페이지 추가
+            try (InputStream firstPageStream = getClass().getResourceAsStream("/pdfs/first_page.pdf")) {
+                if (firstPageStream != null) {
+                    // 임시 파일에 리소스 PDF를 저장하고 병합에 추가
+                    File tempFirstPage = File.createTempFile("first_page", ".pdf");
+                    try (FileOutputStream tempOutStream = new FileOutputStream(tempFirstPage)) {
+                        firstPageStream.transferTo(tempOutStream);
+                    }
+                    mergerUtility.addSource(tempFirstPage);
+                } else {
+                    throw new IOException("첫 페이지 PDF 파일을 찾을 수 없습니다.");
+                }
+            }
+
+            // 기존 PDF 파일 병합 수행
             PdfMergeUtil.mergePdfDocuments(mergerUtility, pdfGenerationInfoList, teeOutputStream, path);
 
             // 개별 PDF 파일 삭제
@@ -199,6 +171,7 @@ public class PdfController {
 
             // 응답 생성
             return PdfResponseUtil.createResponse(byteArrayOutputStream.toByteArray(), mergedFileName);
+
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

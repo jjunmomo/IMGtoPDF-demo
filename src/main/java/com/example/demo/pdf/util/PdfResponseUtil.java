@@ -20,7 +20,7 @@ public class PdfResponseUtil {
                 .replaceAll("\\+", "%20");
         headers.setContentDispositionFormData("attachment", encodedFileName);
 
-        // AOP에서 생성 시간을 헤더에 추가할 것입니다.
+        // AOP에서 생성 시간을 헤더에 추가
         return new ResponseEntity<>(pdfContent, headers, HttpStatus.OK);
     }
 }

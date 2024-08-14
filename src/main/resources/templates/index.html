@@ -44,7 +44,6 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'merged_output.pdf';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -70,10 +69,10 @@
     <button type="submit">PDF 생성</button>
 </form>
 
-<h2>PDF List:</h2>
+<h2>생성한 PDF List:</h2>
 <ul id="pdfList"></ul>
 
-<button onclick="mergePdfs(event)">병합하기</button>
+<button onclick="mergePdfs(event)">합치기</button>
 
 </body>
 </html>
