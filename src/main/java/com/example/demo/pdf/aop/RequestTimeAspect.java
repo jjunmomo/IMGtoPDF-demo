@@ -19,14 +19,14 @@ public class RequestTimeAspect {
     @Around("@annotation(PDFTimeCheck)")
     public Object measureTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
-        System.out.println("startTime : " + sysToLocalDateTime(startTime));
+        System.out.println("생성 시작 시간 : " + sysToLocalDateTime(startTime));
         try {
             Object result = joinPoint.proceed(); // 메서드 실행
             if (result instanceof ResponseEntity) {
                 long endTime = System.currentTimeMillis();
                 long durationInSeconds = (endTime - startTime); // 밀리초를 초로 변환
-                System.out.println("endTime : " + sysToLocalDateTime(endTime));
-                System.out.println("durationInSeconds : " + durationInSeconds + "ms");
+                System.out.println("생성 완료 시간 : " + sysToLocalDateTime(endTime));
+                System.out.println("생성 소요 시간 : " + durationInSeconds + "ms");
 
                 // 결과가 ResponseEntity<byte[]>라면, 새로운 ResponseEntity를 생성
                 ResponseEntity<byte[]> response = (ResponseEntity<byte[]>) result;
