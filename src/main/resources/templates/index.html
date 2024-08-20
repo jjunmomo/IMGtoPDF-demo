@@ -2,7 +2,7 @@
 <html lang="kor">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Image PDF</title>
     <script>
         async function generatePdf(event) {
@@ -17,17 +17,20 @@
             if (response.ok) {
                 const fileName = response.headers.get('Content-Disposition')
                     .match(/filename="(.+)"/)[1];
+                const generationStartTime = response.headers.get('X-PDF-Generation-Start-Time');
+                const generationEndTime = response.headers.get('X-PDF-Generation-End-Time');
                 const generationTime = response.headers.get('X-PDF-Generation-Time');
-                updatePdfList(fileName, generationTime);
+                updatePdfList(fileName,generationStartTime,generationEndTime, generationTime);
             } else {
                 alert('PDF 생성에 실패했습니다.');
             }
         }
 
-        function updatePdfList(fileName, generationTime) {
+        function updatePdfList(fileName,generationStartTime,generationEndTime, generationTime) {
             const listContainer = document.getElementById('pdfList');
             const listItem = document.createElement('li');
-            listItem.textContent = `${fileName} - 생성 시간: ${generationTime}`;
+            listItem.textContent =
+                `${fileName} - 생성 시작 시간 : ${generationStartTime} - 생성 종료 시간 : ${generationEndTime} - 생성 소요 시간: ${generationTime}`;
             listContainer.appendChild(listItem);
         }
 
@@ -56,15 +59,16 @@
 </head>
 <body>
 <h1>Generate PDF Demo</h1>
-<form id="uploadForm" action="/generate" method="post" enctype="multipart/form-data" onsubmit="generatePdf(event)">
+<form action="/generate" enctype="multipart/form-data" id="uploadForm" method="post" onsubmit="generatePdf(event)">
     <label for="image">이미지 선택 :</label>
-    <input type="file" id="image" name="image" accept="image/*" required><br><br>
+    <input accept="image/*" id="image" name="image" required type="file"><br><br>
 
     <label for="content">기능 설명 :</label>
-    <textarea id="content" name="content" rows="4" cols="50" required></textarea><br><br>
+    <textarea cols="50" id="content" name="content" required rows="4"></textarea><br><br>
 
     <label for="modificationRequirements">수정 요청사항 :</label>
-    <textarea id="modificationRequirements" name="modificationRequirements" rows="4" cols="50" required></textarea><br><br>
+    <textarea cols="50" id="modificationRequirements" name="modificationRequirements" required
+              rows="4"></textarea><br><br>
 
     <button type="submit">PDF 생성</button>
 </form>

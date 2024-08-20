@@ -78,8 +78,10 @@ public class PdfController {
 //            PDType0Font font = PDType0Font.load(document, new File(fontPath));
 
 
-            PDType0Font boldFont = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Bold.ttf"));
-            PDType0Font bodyFont = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Regular.ttf"));
+            PDType0Font boldFont =
+                    PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Bold.ttf"));
+            PDType0Font bodyFont =
+                    PDType0Font.load(document, getClass().getResourceAsStream("/fonts/Pretendard-Regular.ttf"));
             PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
             float pageWidth = page.getMediaBox().getHeight();
@@ -110,6 +112,7 @@ public class PdfController {
             String fileName = "generated_pdf_" + System.currentTimeMillis() + ".pdf";
             File file = new File(path + fileName);
             document.save(file);
+            document.close();
 
             PdfGenerationInfo pdfInfo = new PdfGenerationInfo(fileName);
             pdfGenerationInfoList.add(pdfInfo);
