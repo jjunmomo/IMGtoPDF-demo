@@ -24,7 +24,7 @@ public class RequestTimeAspect {
             Object result = joinPoint.proceed(); // 메서드 실행
             if (result instanceof ResponseEntity) {
                 long endTime = System.currentTimeMillis();
-                long durationInSeconds = (endTime - startTime); // 밀리초를 초로 변환
+                double durationInSeconds = (double) (endTime - startTime)/1000; // 밀리초를 초로 변환
                 System.out.println("생성 완료 시간 : " + sysToLocalDateTime(endTime));
                 System.out.println("생성 소요 시간 : " + durationInSeconds + "ms");
 
@@ -37,7 +37,7 @@ public class RequestTimeAspect {
                 // X-PDF-Generation-Time 헤더 추가
                 headers.add("X-PDF-Generation-Start-Time", sysToLocalDateTime(startTime));
                 headers.add("X-PDF-Generation-End-Time", sysToLocalDateTime(endTime));
-                headers.add("X-PDF-Generation-Time", durationInSeconds + "ms");
+                headers.add("X-PDF-Generation-Time", durationInSeconds + " s");
 
                 // 새로운 ResponseEntity 반환
                 return new ResponseEntity<>(response.getBody(), headers, response.getStatusCode());
