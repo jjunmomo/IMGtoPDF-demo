@@ -26,6 +26,7 @@ public class RequestTimeAspect {
                 long endTime = System.currentTimeMillis();
                 long durationInSeconds = (endTime - startTime); // 밀리초를 초로 변환
                 System.out.println("endTime : " + sysToLocalDateTime(endTime));
+                System.out.println("durationInSeconds : " + durationInSeconds + "ms");
 
                 // 결과가 ResponseEntity<byte[]>라면, 새로운 ResponseEntity를 생성
                 ResponseEntity<byte[]> response = (ResponseEntity<byte[]>) result;
