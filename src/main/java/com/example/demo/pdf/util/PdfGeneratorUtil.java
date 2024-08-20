@@ -21,7 +21,8 @@ public class PdfGeneratorUtil {
                                 String text,
                                 float x,
                                 float y,
-                                int fontSize) throws IOException {
+                                int fontSize,
+                                Color color) throws IOException {
         // 줄바꿈 문자를 통일 (`\r\n` 또는 `\r`을 `\n`으로 변환)
         text = text
                 .replace("\r\n", "\n")
@@ -34,6 +35,8 @@ public class PdfGeneratorUtil {
 
         contentStream.beginText();
         contentStream.newLineAtOffset(x, y);
+
+        contentStream.setNonStrokingColor(color);
 
         for (String line : lines) {
             contentStream.showText(line);  // 각 줄 출력
@@ -77,8 +80,8 @@ public class PdfGeneratorUtil {
                                  float pageHeight,
                                  float pageWidth,
                                  int pageNumber) throws IOException {
-        drawText(contentStream, font, "문서 제목", 20, pageHeight - 20, 12);
-        drawText(contentStream, font, "페이지 : " + pageNumber, pageWidth - 100, pageHeight - 30, 12);
+        drawText(contentStream, font, "문서 제목", 20, pageHeight - 20, 12,Color.BLACK);
+        drawText(contentStream, font, "페이지 : " + pageNumber, pageWidth - 100, pageHeight - 30, 12,Color.BLACK);
         drawLine(contentStream, Color.gray,0, pageHeight - PdfConstants.HEADER_HEIGHT, pageWidth, pageHeight - PdfConstants.HEADER_HEIGHT);
     }
 
@@ -88,7 +91,7 @@ public class PdfGeneratorUtil {
     public static void addFooter(PDPageContentStream contentStream,
                                  PDType0Font font,
                                  float pageWidth) throws IOException {
-        drawText(contentStream, font, "회사 정보", pageWidth-100 , PdfConstants.VERTICAL_MARGIN + 20, 9);
+        drawText(contentStream, font, "Copyright © 2024 mBaaS all right reserved", pageWidth-350 , PdfConstants.VERTICAL_MARGIN + 20, 15,Color.LIGHT_GRAY);
         drawLine(contentStream, Color.gray,0, PdfConstants.FOOTER_HEIGHT, pageWidth, PdfConstants.FOOTER_HEIGHT);
     }
 
@@ -143,18 +146,18 @@ public class PdfGeneratorUtil {
                                          float pageHeight,
                                          ProposalComments comments) throws IOException {
         //중앙 섹션
-        drawText(contentStream, font1, "화면 및 기능 설명", sectionWidth + 20, pageHeight - 60, 14);
+        drawText(contentStream, font1, "화면 및 기능 설명", sectionWidth + 20, pageHeight - 60, 14,Color.BLACK);
 
         drawText(contentStream, font2, comments.getContent()
                 != null
-                ? comments.getContent() : "기능 설명이 없습니다.", sectionWidth + 20, pageHeight - 80, 12);
+                ? comments.getContent() : "기능 설명이 없습니다.", sectionWidth + 20, pageHeight - 80, 12,Color.BLACK);
 
         //우측 섹션
-        drawText(contentStream, font1, "수정 요청사항", 2 * sectionWidth + 20, pageHeight - 60, 14);
+        drawText(contentStream, font1, "수정 요청사항", 2 * sectionWidth + 20, pageHeight - 60, 14,Color.BLACK);
 
         drawText(contentStream, font2, comments.getModificationRequirements()
                 != null
-                ? comments.getModificationRequirements() : "수정 요청사항이 없습니다.", 2 * sectionWidth + 20, pageHeight - 80, 12);
+                ? comments.getModificationRequirements() : "수정 요청사항이 없습니다.", 2 * sectionWidth + 20, pageHeight - 80, 12,Color.BLACK);
     }
 
 }
