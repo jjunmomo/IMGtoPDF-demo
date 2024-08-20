@@ -22,10 +22,24 @@ public class PdfGeneratorUtil {
                                 float x,
                                 float y,
                                 int fontSize) throws IOException {
-        contentStream.beginText();
+        // 줄바꿈 문자를 통일 (`\r\n` 또는 `\r`을 `\n`으로 변환)
+        text = text
+                .replace("\r\n", "\n")
+                .replace("\r", "\n");
+
+        // 텍스트 줄바꿈 처리
+        String[] lines = text.split("\n");
         contentStream.setFont(font, fontSize);
+        contentStream.setLeading(fontSize * 1.2f); // 줄 간격 설정
+
+        contentStream.beginText();
         contentStream.newLineAtOffset(x, y);
-        contentStream.showText(text);
+
+        for (String line : lines) {
+            contentStream.showText(line);  // 각 줄 출력
+            contentStream.newLine();  // 다음 줄로 이동
+        }
+
         contentStream.endText();
     }
 
